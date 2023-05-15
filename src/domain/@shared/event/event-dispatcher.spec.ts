@@ -1,3 +1,5 @@
+import CustomerCreatedEvent from "../../customer/event/customer-created.event";
+import SendLogWhenCustomerIsCreatedHandler from "../../customer/event/handler/send-log-when-customer-is-created.handler";
 import SendEmailWhenProductIsCreatedHandler from "../../product/event/handler/send-email-when-product-is-created.handler";
 import ProductCreatedEvent from "../../product/event/product-created.event";
 import EventDispatcher from "./event-dispatcher";
@@ -76,6 +78,86 @@ describe("Domain events tests", () => {
 
     // Quando o notify for executado o SendEmailWhenProductIsCreatedHandler.handle() deve ser chamado
     eventDispatcher.notify(productCreatedEvent);
+
+    expect(spyEventHandler).toHaveBeenCalled();
+  });
+
+//SendLogWhenCustomerIsCreatedHandler
+  it("should register an event handler", () => {
+    const eventDispatcher = new EventDispatcher();
+    const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"]
+    ).toBeDefined();
+    expect(eventDispatcher.getEventHandlers["CustomerCreatedEvent"].length).toBe(
+      1
+    );
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
+    ).toMatchObject(eventHandler);
+  });
+
+
+  it("should unregister an event handler", () => {
+    const eventDispatcher = new EventDispatcher();
+    const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
+    ).toMatchObject(eventHandler);
+
+    eventDispatcher.unregister("CustomerCreatedEvent", eventHandler);
+
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"]
+    ).toBeDefined();
+    expect(eventDispatcher.getEventHandlers["CustomerCreatedEvent"].length).toBe(
+      0
+    );
+  });
+
+
+  it("should unregister all event handlers", () => {
+    const eventDispatcher = new EventDispatcher();
+    const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
+    ).toMatchObject(eventHandler);
+
+    eventDispatcher.unregisterAll();
+
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"]
+    ).toBeUndefined();
+  });
+
+  it("should notify all event handlers", () => {
+    const eventDispatcher = new EventDispatcher();
+    const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+    const spyEventHandler = jest.spyOn(eventHandler, "handle");
+
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+
+    expect(
+      eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
+    ).toMatchObject(eventHandler);
+
+    const customerCreatedEvent = new CustomerCreatedEvent({
+      name: "Product 1",
+      description: "Product 1 description",
+      price: 10.0,
+    });
+
+    // Quando o notify for executado o SendLogWhenCustomerIsCreatedHandler.handle() deve ser chamado
+    eventDispatcher.notify(customerCreatedEvent);
 
     expect(spyEventHandler).toHaveBeenCalled();
   });
