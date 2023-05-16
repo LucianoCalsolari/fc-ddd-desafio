@@ -1,5 +1,8 @@
+import CustomerChangedEvent from "../../customer/event/customer-changed.event";
 import CustomerCreatedEvent from "../../customer/event/customer-created.event";
+import SendLogWhenCustomerIsChangedHandler from "../../customer/event/handler/send-log-when-customer-is-changed";
 import SendLogWhenCustomerIsCreatedHandler from "../../customer/event/handler/send-log-when-customer-is-created.handler";
+import SendLogWhenCustomerIsCreated2Handler from "../../customer/event/handler/send-log-when-customer-is-created2.handler";
 import SendEmailWhenProductIsCreatedHandler from "../../product/event/handler/send-email-when-product-is-created.handler";
 import ProductCreatedEvent from "../../product/event/product-created.event";
 import EventDispatcher from "./event-dispatcher";
@@ -86,14 +89,16 @@ describe("Domain events tests", () => {
   it("should register an event handler", () => {
     const eventDispatcher = new EventDispatcher();
     const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+    const eventHandler2 = new SendLogWhenCustomerIsCreated2Handler();
 
     eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler2);
 
     expect(
       eventDispatcher.getEventHandlers["CustomerCreatedEvent"]
     ).toBeDefined();
     expect(eventDispatcher.getEventHandlers["CustomerCreatedEvent"].length).toBe(
-      1
+      2
     );
     expect(
       eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
@@ -104,8 +109,10 @@ describe("Domain events tests", () => {
   it("should unregister an event handler", () => {
     const eventDispatcher = new EventDispatcher();
     const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+    const eventHandler2 = new SendLogWhenCustomerIsCreated2Handler();
 
     eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler2);
 
     expect(
       eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
@@ -117,7 +124,7 @@ describe("Domain events tests", () => {
       eventDispatcher.getEventHandlers["CustomerCreatedEvent"]
     ).toBeDefined();
     expect(eventDispatcher.getEventHandlers["CustomerCreatedEvent"].length).toBe(
-      0
+      1
     );
   });
 
@@ -125,8 +132,10 @@ describe("Domain events tests", () => {
   it("should unregister all event handlers", () => {
     const eventDispatcher = new EventDispatcher();
     const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+    const eventHandler2 = new SendLogWhenCustomerIsCreated2Handler();
 
     eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler2);
 
     expect(
       eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
@@ -142,18 +151,19 @@ describe("Domain events tests", () => {
   it("should notify all event handlers", () => {
     const eventDispatcher = new EventDispatcher();
     const eventHandler = new SendLogWhenCustomerIsCreatedHandler();
+    const eventHandler2 = new SendLogWhenCustomerIsCreated2Handler();
     const spyEventHandler = jest.spyOn(eventHandler, "handle");
 
     eventDispatcher.register("CustomerCreatedEvent", eventHandler);
+    eventDispatcher.register("CustomerCreatedEvent", eventHandler2);
 
     expect(
       eventDispatcher.getEventHandlers["CustomerCreatedEvent"][0]
     ).toMatchObject(eventHandler);
 
     const customerCreatedEvent = new CustomerCreatedEvent({
-      name: "Product 1",
-      description: "Product 1 description",
-      price: 10.0,
+      name: "Customer 1",
+      address: "Address 1",
     });
 
     // Quando o notify for executado o SendLogWhenCustomerIsCreatedHandler.handle() deve ser chamado
@@ -161,4 +171,83 @@ describe("Domain events tests", () => {
 
     expect(spyEventHandler).toHaveBeenCalled();
   });
+
+//SendLogWhenCustomerIsChangedHandler
+it("should register an event handler", () => {
+  const eventDispatcher = new EventDispatcher();
+  const eventHandler = new SendLogWhenCustomerIsChangedHandler();
+
+  eventDispatcher.register("CustomerChangedEvent", eventHandler);
+
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"]
+  ).toBeDefined();
+  expect(eventDispatcher.getEventHandlers["CustomerChangedEvent"].length).toBe(
+    1
+  );
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"][0]
+  ).toMatchObject(eventHandler);
+});
+
+
+it("should unregister an event handler", () => {
+  const eventDispatcher = new EventDispatcher();
+  const eventHandler = new SendLogWhenCustomerIsChangedHandler();
+
+  eventDispatcher.register("CustomerChangedEvent", eventHandler);
+
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"][0]
+  ).toMatchObject(eventHandler);
+
+  eventDispatcher.unregister("CustomerChangedEvent", eventHandler);
+
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"]
+  ).toBeDefined();
+  expect(eventDispatcher.getEventHandlers["CustomerChangedEvent"].length).toBe(
+    0
+  );
+});
+
+
+it("should unregister all event handlers", () => {
+  const eventDispatcher = new EventDispatcher();
+  const eventHandler = new SendLogWhenCustomerIsChangedHandler();
+
+  eventDispatcher.register("CustomerChangedEvent", eventHandler);
+
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"][0]
+  ).toMatchObject(eventHandler);
+
+  eventDispatcher.unregisterAll();
+
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"]
+  ).toBeUndefined();
+});
+
+it("should notify all event handlers", () => {
+  const eventDispatcher = new EventDispatcher();
+  const eventHandler = new SendLogWhenCustomerIsChangedHandler();
+  const spyEventHandler = jest.spyOn(eventHandler, "handle");
+
+  eventDispatcher.register("CustomerChangedEvent", eventHandler);
+
+  expect(
+    eventDispatcher.getEventHandlers["CustomerChangedEvent"][0]
+  ).toMatchObject(eventHandler);
+
+  const customerChangedEvent = new CustomerChangedEvent({
+    name: "Customer 1",
+    address: "Address 1",
+  });
+
+  // Quando o notify for executado o SendLogWhenCustomerIsCreatedHandler.handle() deve ser chamado
+  eventDispatcher.notify(customerChangedEvent);
+
+  expect(spyEventHandler).toHaveBeenCalled();
+});
 });
